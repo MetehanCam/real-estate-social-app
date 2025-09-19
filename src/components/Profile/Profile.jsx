@@ -1,4 +1,4 @@
-import React,import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getPostsByUserId, getCurrentUser } from '../../data/staticMockData';
 import Post from '../Posts/Post';
 import './Profile.css';

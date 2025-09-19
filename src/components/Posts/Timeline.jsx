@@ -1,4 +1,4 @@
-import React,import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getAllPosts } from '../../data/staticMockData';
 import Post from './Post';
 import PostForm from './PostForm';
