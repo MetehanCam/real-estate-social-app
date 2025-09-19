@@ -1,5 +1,5 @@
 {
-  "name": "real-estate-microblog",
+  "name": "real-estate-social-app",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,12 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "bcryptjs": "^3.0.2",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.2",
-    "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.18.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.8.1"
@@ -29,5 +23,8 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
     "vite": "^5.0.8"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
