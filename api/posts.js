@@ -62,10 +62,10 @@ export default async function handler(req, res) {
   // Set CORS headers for all requests
   setCorsHeaders(res, origin);
 
-  // Connect to database
-  await connectDB();
-
   try {
+    // Connect to database
+    await connectDB();
+
     const { pathname } = new URL(req.url, `http://${req.headers.host}`);
     const route = pathname.replace('/api/posts', '') || '/';
     const segments = route.split('/').filter(Boolean);
@@ -77,7 +77,7 @@ export default async function handler(req, res) {
         .populate('comments.user', 'username fullName avatar')
         .sort({ createdAt: -1 });
 
-      res.json(posts);
+      return res.json(posts);
     } else if (route === '/' && method === 'POST') {
       // Create a new post
       const user = await authenticate(req);
@@ -92,7 +92,7 @@ export default async function handler(req, res) {
       await post.save();
       await post.populate('user', 'username fullName avatar');
 
-      res.status(201).json(post);
+      return res.status(201).json(post);
     } else if (segments.length === 2 && segments[1] === 'like' && method === 'POST') {
       // Like/Unlike a post
       const user = await authenticate(req);
@@ -151,16 +151,16 @@ export default async function handler(req, res) {
       }
 
       await Post.findByIdAndDelete(postId);
-      res.json({ message: 'Post deleted successfully' });
+      return res.json({ message: 'Post deleted successfully' });
     } else {
-      res.status(404).json({ message: 'Route not found' });
+      return res.status(404).json({ message: 'Route not found' });
     }
   } catch (error) {
     console.error('Posts API error:', error);
     if (error.message === 'No token provided' || error.message === 'Invalid token' || error.message === 'User not found') {
-      res.status(401).json({ message: 'Unauthorized' });
+      return res.status(401).json({ message: 'Unauthorized' });
     } else {
-      res.status(500).json({ message: 'Internal server error' });
+      return res.status(500).json({ message: 'Internal server error', error: error.message });
     }
   }
 }
