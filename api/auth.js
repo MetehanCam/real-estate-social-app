@@ -43,10 +43,10 @@ export default async function handler(req, res) {
   // Set CORS headers for all requests
   setCorsHeaders(res, origin);
 
-  // Connect to database
-  await connectDB();
-
   try {
+    // Connect to database
+    await connectDB();
+
     const { pathname } = new URL(req.url, `http://${req.headers.host}`);
     const route = pathname.replace('/api/auth', '') || '/';
 
@@ -118,10 +118,20 @@ export default async function handler(req, res) {
         }
       });
     } else {
-      res.status(404).json({ message: 'Route not found' });
+      return res.status(404).json({ message: 'Route not found' });
     }
   } catch (error) {
     console.error('Auth API error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      mongoUri: process.env.MONGODB_URI ? 'Set' : 'Not set',
+      jwtSecret: process.env.JWT_SECRET ? 'Set' : 'Not set'
+    });
+    return res.status(500).json({ 
+      message: 'Internal server error',
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 }
