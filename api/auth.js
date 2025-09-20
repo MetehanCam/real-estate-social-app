@@ -50,7 +50,49 @@ export default async function handler(req, res) {
     const { pathname } = new URL(req.url, `http://${req.headers.host}`);
     const route = pathname.replace('/api/auth', '') || '/';
 
-    if (route === '/login' && method === 'POST') {
+    console.log('Auth request details:', {
+      method,
+      pathname,
+      route,
+      body: req.body,
+      url: req.url
+    });
+
+    if (route === '/' && method === 'POST') {
+      // Handle POST to /api/auth (without /login)
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ message: 'Email and password are required' });
+      }
+
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(400).json({ message: 'Invalid credentials' });
+      }
+
+      const isMatch = await user.comparePassword(password);
+      if (!isMatch) {
+        return res.status(400).json({ message: 'Invalid credentials' });
+      }
+
+      const token = jwt.sign(
+        { userId: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      return res.json({
+        token,
+        user: {
+          id: user._id,
+          fullName: user.fullName,
+          email: user.email,
+          avatar: user.avatar
+        }
+      });
+    } else if (route === '/login' && method === 'POST') {
+      // Handle POST to /api/auth/login (with /login)
       const { email, password } = req.body;
 
       if (!email || !password) {
