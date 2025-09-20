@@ -62,7 +62,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: 'Invalid credentials' });
       }
 
-      const isMatch = await bcrypt.compare(password, user.password);
+      const isMatch = await user.comparePassword(password);
       if (!isMatch) {
         return res.status(400).json({ message: 'Invalid credentials' });
       }
@@ -73,19 +73,19 @@ export default async function handler(req, res) {
         { expiresIn: '7d' }
       );
 
-      res.json({
+      return res.json({
         token,
         user: {
           id: user._id,
-          name: user.name,
+          fullName: user.fullName,
           email: user.email,
           avatar: user.avatar
         }
       });
     } else if (route === '/register' && method === 'POST') {
-      const { name, email, password } = req.body;
+      const { fullName, email, password } = req.body;
 
-      if (!name || !email || !password) {
+      if (!fullName || !email || !password) {
         return res.status(400).json({ message: 'All fields are required' });
       }
 
@@ -94,13 +94,10 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: 'User already exists' });
       }
 
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-
       const user = new User({
-        name,
+        fullName,
         email,
-        password: hashedPassword
+        password
       });
 
       await user.save();
@@ -111,11 +108,11 @@ export default async function handler(req, res) {
         { expiresIn: '7d' }
       );
 
-      res.status(201).json({
+      return res.status(201).json({
         token,
         user: {
           id: user._id,
-          name: user.name,
+          fullName: user.fullName,
           email: user.email,
           avatar: user.avatar
         }
