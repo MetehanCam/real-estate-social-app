@@ -1,23 +1,6 @@
-import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-
-// MongoDB connection
-const connectDB = async () => {
-  if (mongoose.connections[0].readyState) {
-    return;
-  }
-  
-  try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-  } catch (err) {
-    console.error('MongoDB connection error:', err);
-  }
-};
+import { connectToDatabase } from '../lib/mongodb.js';
 
 // CORS configuration
 const setCorsHeaders = (res, origin) => {
@@ -45,7 +28,7 @@ export default async function handler(req, res) {
 
   try {
     // Connect to database
-    await connectDB();
+    const { db } = await connectToDatabase();
 
     const { pathname } = new URL(req.url, `http://${req.headers.host}`);
     const route = pathname.replace('/api/auth', '') || '/';
@@ -66,12 +49,12 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: 'Email and password are required' });
       }
 
-      const user = await User.findOne({ email });
+      const user = await db.collection('users').findOne({ email });
       if (!user) {
         return res.status(400).json({ message: 'Invalid credentials' });
       }
 
-      const isMatch = await user.comparePassword(password);
+      const isMatch = user.password === password;
       if (!isMatch) {
         return res.status(400).json({ message: 'Invalid credentials' });
       }
@@ -99,12 +82,12 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: 'Email and password are required' });
       }
 
-      const user = await User.findOne({ email });
+      const user = await db.collection('users').findOne({ email });
       if (!user) {
         return res.status(400).json({ message: 'Invalid credentials' });
       }
 
-      const isMatch = await user.comparePassword(password);
+      const isMatch = user.password === password;
       if (!isMatch) {
         return res.status(400).json({ message: 'Invalid credentials' });
       }
@@ -131,18 +114,29 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: 'All fields are required' });
       }
 
-      const existingUser = await User.findOne({ email });
+      const existingUser = await db.collection('users').findOne({ email });
       if (existingUser) {
         return res.status(400).json({ message: 'User already exists' });
       }
 
-      const user = new User({
+      const result = await db.collection('users').insertOne({
         fullName,
         email,
-        password
+        password,
+        avatar: 'https://via.placeholder.com/40',
+        bio: '',
+        location: '',
+        joinedDate: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date()
       });
 
-      await user.save();
+      const user = { 
+        _id: result.insertedId, 
+        fullName, 
+        email, 
+        avatar: 'https://via.placeholder.com/40' 
+      };
 
       const token = jwt.sign(
         { userId: user._id },
